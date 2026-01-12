@@ -35,8 +35,8 @@ The deployed agent can:
 
 ### 1. Clone and Setup
 ```bash
-git clone <your-repo-url>
-cd agentcore_runtime_ci-cd
+git clone https://github.com/aws-samples/sample-bedrock-agentcore-runtime-cicd
+cd sample-bedrock-agentcore-runtime-cicd
 ```
 
 ### 2. Configure AWS Authentication
@@ -44,7 +44,7 @@ Reference Documentation: https://aws.amazon.com/blogs/security/use-iam-roles-to-
 
 ```bash
 # Set up OIDC authentication (run once)
-python scripts/setup_oidc.py --github-repo your-username/your-repo-name
+python scripts/setup_oidc.py --github-repo <your-username>/<your-repo-name>
 ```
 
 ### 3. Add GitHub Secrets
@@ -60,7 +60,9 @@ git commit -m "Deploy my agent"
 git push origin main
 ```
 
-The pipeline will automatically:
+In this code sample, the pipeline trigger is configured for manual execution via workflow_dispatch. To enable automated pipeline execution, you can modify the trigger to use on: push or on: pull_request based on your specific use case.
+
+The pipeline will:
 1. **Validate**: Code formatting, linting, and dependency checks
 2. **Build & Deploy**: ARM64-compatible container with security scanning
 3. **Test**: Integration tests via separate workflow (manual trigger)
