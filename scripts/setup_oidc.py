@@ -134,6 +134,12 @@ def create_github_role(iam_client, provider_arn, github_repo):
                     "bedrock:InvokeModelWithResponseStream", # Stream model responses
                     "bedrock:GetFoundationModel",       # Get model information
                     "bedrock:ListFoundationModels",     # List available models
+                    "bedrock:CreateGuardrail",          # Create guardrails
+                    "bedrock:GetGuardrail",             # Get guardrail details
+                    "bedrock:ListGuardrails",           # List guardrails
+                    "bedrock:UpdateGuardrail",          # Update guardrails
+                    "bedrock:DeleteGuardrail",          # Delete guardrails
+                    "bedrock:CreateGuardrailVersion",   # Create guardrail versions
                     "bedrock-agentcore:*",              # AgentCore runtime operations
                     "bedrock-agentcore-control:*",      # AgentCore control plane operations
                     
