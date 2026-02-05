@@ -13,8 +13,8 @@ app = BedrockAgentCoreApp()
 
 
 # Configure the model for the agent with guardrail
-# Using Amazon Nova Micro - available by default in AWS accounts
-model_id = "amazon.nova-micro-v1:0"
+# Using Claude 3.5 Haiku - fast, cost-effective, available by default
+model_id = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
 
 # Load guardrail ID if available
 guardrail_config = None
