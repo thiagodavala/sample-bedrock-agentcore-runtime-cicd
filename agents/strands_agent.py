@@ -13,8 +13,8 @@ from strands_tools import calculator
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stdout
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
 )
 logger = logging.getLogger(__name__)
 
@@ -81,26 +81,26 @@ def strands_agent_bedrock(payload):
     """
     try:
         logger.info(f"Received payload: {payload}")
-        
+
         # Extract the user's prompt from the payload
         user_input = payload.get("prompt")
-        
+
         if not user_input:
             logger.error("No prompt found in payload")
             return "Error: No prompt provided"
-        
+
         logger.info(f"Processing prompt: {user_input}")
 
         # Process the input through the agent (handles tool selection and model inference)
         response = agent(user_input)
-        
+
         logger.info(f"Agent response: {response}")
 
         # Extract and return the text content from the response
         result = response.message["content"][0]["text"]
         logger.info(f"Returning result: {result}")
         return result
-        
+
     except Exception as e:
         logger.error(f"Error processing request: {e}", exc_info=True)
         return f"Error: {str(e)}"
