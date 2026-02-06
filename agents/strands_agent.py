@@ -92,7 +92,8 @@ def strands_agent_bedrock(payload):
 
         logger.info(f"Processing prompt: {user_input}")
 
-        # Process the input through the agent (handles tool selection and model inference)
+        # Process the input through the agent
+        # (handles tool selection and model inference)
         response = agent(user_input)
 
         logger.info(f"Agent response: {response}")
