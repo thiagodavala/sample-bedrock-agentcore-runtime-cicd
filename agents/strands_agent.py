@@ -40,8 +40,8 @@ app = BedrockAgentCoreApp()
 logger.info("Initializing Strands Agent...")
 
 # Configure the model for the agent with guardrail
-# Using Claude 3.5 Haiku - fast, cost-effective, available by default
-model_id = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+# Using Amazon Nova Micro - lightweight, cost-effective model
+model_id = "amazon.nova-micro-v1:0"
 logger.info(f"Using model: {model_id}")
 
 # Load guardrail ID if available
