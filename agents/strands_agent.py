@@ -11,13 +11,28 @@ from strands import Agent
 from strands.models import BedrockModel
 from strands_tools import calculator
 
-# Configure logging
+# Configure logging to output to both stdout and stderr
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     stream=sys.stdout,
+    force=True,
 )
+
+# Add stderr handler as well
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.ERROR)
+stderr_handler.setFormatter(
+    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+)
+
 logger = logging.getLogger(__name__)
+logger.addHandler(stderr_handler)
+
+# Also configure root logger to ensure all logs are captured
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(stderr_handler)
 
 # Initialize the Bedrock AgentCore application
 app = BedrockAgentCoreApp()
