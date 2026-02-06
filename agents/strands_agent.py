@@ -4,9 +4,8 @@ from strands import Agent
 app = BedrockAgentCoreApp()
 
 # Usando Amazon Nova Micro - modelo simples da Amazon, sem necessidade de formulário
-agent = Agent(
-    model="amazon.nova-micro-v1:0"
-)
+agent = Agent(model="amazon.nova-micro-v1:0")
+
 
 @app.entrypoint
 def invoke(payload):
@@ -14,6 +13,7 @@ def invoke(payload):
     user_message = payload.get("prompt", "Hello! How can I help you today?")
     result = agent(user_message)
     return {"result": result.message}
+
 
 if __name__ == "__main__":
     app.run()
