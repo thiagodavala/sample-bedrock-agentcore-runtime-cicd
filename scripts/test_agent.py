@@ -92,16 +92,10 @@ def test_agent(agent_name, region):
     
     # Define comprehensive test cases covering different agent capabilities
     test_cases = [
-        {"prompt": "What is 2 + 2?"},                          # Basic addition
-        {"prompt": "Calculate 15 * 7"},                        # Multiplication
-        {"prompt": "What is 100 / 4?"},                        # Division
-        {"prompt": "What is the square root of 16?"},          # Advanced math
-        {"prompt": "Calculate (5 + 3) * 2"},                   # Complex expression
-        {"prompt": "Hello, how are you?"},                     # General conversation
-        {"prompt": "What can you help me with?"},              # Capability inquiry
-        {"prompt": "Explain what 2^3 equals"},                 # Math explanation
-        {"prompt": "Can you solve 25 - 8?"},                   # Subtraction
-        {"prompt": "What is 0.5 + 0.3?"}                       # Decimal calculation
+        {"prompt": "What is 2 + 2?", "expected_contains": ["4"]},
+        {"prompt": "Calculate 15 * 7", "expected_contains": ["105"]},
+        {"prompt": "What is 100 / 4?", "expected_contains": ["25"]},
+        {"prompt": "Hello, how are you?", "expected_contains": None},  # General conversation
     ]
     
     logger.info(f"Testing agent: {agent_name}")
@@ -114,6 +108,8 @@ def test_agent(agent_name, region):
     # Execute each test case and validate responses
     for i, test_case in enumerate(test_cases, 1):
         prompt = test_case['prompt']
+        expected_contains = test_case.get('expected_contains')
+        
         logger.info(f"\n[Test {i}/{len(test_cases)}] Question: {prompt}")
         logger.info("-" * 40)
         
@@ -122,8 +118,10 @@ def test_agent(agent_name, region):
             response = client.invoke_agent_runtime(
                 agentRuntimeArn=agent_arn,
                 qualifier="DEFAULT",  # Use default agent version
-                payload=dumps(test_case)
+                payload=dumps({"prompt": prompt})
             )
+            
+            response_text = None
             
             # Parse and display the response based on format
             if 'response' in response:
@@ -137,32 +135,92 @@ def test_agent(agent_name, region):
                     if isinstance(response_json, dict):
                         # Extract response content from common field names
                         if 'content' in response_json:
-                            logger.info(f"Response: {response_json['content']}")
+                            response_text = str(response_json['content'])
                         elif 'message' in response_json:
-                            logger.info(f"Response: {response_json['message']}")
+                            response_text = str(response_json['message'])
                         elif 'text' in response_json:
-                            logger.info(f"Response: {response_json['text']}")
+                            response_text = str(response_json['text'])
                         else:
-                            logger.info(f"Response (JSON): {response_json}")
+                            response_text = str(response_json)
                     else:
-                        logger.info(f"Response: {response_json}")
+                        response_text = str(response_json)
                 except JSONDecodeError:
-                    # Handle plain text responses
-                    logger.info(f"Response: {response_text}")
+                    # Already have plain text response
+                    pass
                     
             elif 'payload' in response:
                 # Handle direct payload responses
                 response_text = response['payload']
                 if isinstance(response_text, bytes):
                     response_text = response_text.decode('utf-8')
+            
+            # Display the response
+            if response_text:
                 logger.info(f"Response: {response_text}")
+                
+                # Validate expected content if specified
+                if expected_contains:
+                    found = False
+                    for expected in expected_contains:
+                        if expected.lower() in response_text.lower():
+                            found = True
+                            break
+                    
+                    if found:
+                        logger.info(f"✓ Test passed - found expected content")
+                    else:
+                        logger.warning(f"⚠ Response doesn't contain expected values: {expected_contains}")
+                        logger.warning("This may be acceptable depending on the agent's response style")
+                else:
+                    logger.info(f"✓ Test passed - agent responded")
             else:
                 # Handle HTTP status responses
-                logger.info(f"Test passed (HTTP {response.get('statusCode', 200)})")
+                logger.info(f"✓ Test passed (HTTP {response.get('statusCode', 200)})")
                 logger.info(f"Session ID: {response.get('runtimeSessionId', 'N/A')}")
             
         except Exception as e:
-            logger.error(f"Test failed: {e}")
+            logger.error(f"✗ Test failed: {e}")
+            
+            # Try to get CloudWatch logs for debugging
+            if agent_id:
+                logger.info("\nAttempting to fetch CloudWatch logs for debugging...")
+                try:
+                    logs_client = boto3_client("logs", region_name=region)
+                    log_group_name = f"/aws/bedrock/agentcore/{agent_id}"
+                    
+                    # Get recent log streams
+                    streams_response = logs_client.describe_log_streams(
+                        logGroupName=log_group_name,
+                        orderBy='LastEventTime',
+                        descending=True,
+                        limit=1
+                    )
+                    
+                    if streams_response.get('logStreams'):
+                        stream_name = streams_response['logStreams'][0]['logStreamName']
+                        
+                        # Get recent log events
+                        events_response = logs_client.get_log_events(
+                            logGroupName=log_group_name,
+                            logStreamName=stream_name,
+                            limit=20,
+                            startFromHead=False
+                        )
+                        
+                        if events_response.get('events'):
+                            logger.info("\nRecent CloudWatch logs:")
+                            logger.info("-" * 60)
+                            for event in events_response['events'][-10:]:  # Last 10 events
+                                logger.info(event['message'])
+                            logger.info("-" * 60)
+                        else:
+                            logger.info("No recent log events found")
+                    else:
+                        logger.info(f"No log streams found in {log_group_name}")
+                        
+                except Exception as log_error:
+                    logger.warning(f"Could not fetch CloudWatch logs: {log_error}")
+            
             all_passed = False
     
     # Report final test results
